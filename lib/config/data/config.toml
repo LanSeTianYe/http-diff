@@ -1,0 +1,48 @@
+[app]
+name = "test"
+
+[log]
+console = true
+level = "DEBUG"
+path = "./"
+file_name = "server.log"
+max_size = 100
+max_backups = 30
+max_age = 15
+
+[fast_http]
+read_time_out = "500ms"
+write_time_out = "500ms"
+max_idle_conn_duration = "1h"
+max_conns_per_host = 512
+retry_times = 2
+
+[[diff_configs]]
+name = "task_1"
+concurrency = 10
+wait_time = "0"
+work_dir = "./data"
+payload = "payload_task_1.txt"
+url_a = "https://example.com/url_a"
+url_b = "https://example.com/url_b"
+method = "GET"
+content_type = "application/json"
+ignore_fields = "field_a"
+output_show_no_diff_line = true
+log_statistics = false
+success_conditions = "stat=1,code=0"
+
+[[diff_configs]]
+name = "task_2"
+concurrency = 5
+wait_time = "1000ms"
+work_dir = "./data"
+payload = "payload_task_2.txt"
+url_a = "https://example.com/url_a"
+url_b = "https://example.com/url_b"
+method = "POST"
+content_type = "application/json"
+ignore_fields = "field_b"
+output_show_no_diff_line = false
+log_statistics = true
+success_conditions = "stat=1,code=1"
