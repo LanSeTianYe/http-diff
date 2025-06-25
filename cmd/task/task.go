@@ -95,12 +95,7 @@ func InitTask(ctx context.Context, cfg Config) (*Task, error) {
 		Config:              cfg,
 		SuccessConditionMap: make(map[string]string),
 		waitGroup:           &sync.WaitGroup{},
-		statisticsInfo: &StatisticsInfo{
-			TotalCount:   lineCount,
-			SuccessCount: 0,
-			FailedCount:  0,
-			DiffCount:    0,
-		},
+		statisticsInfo:      NewStatisticsInfo(lineCount),
 		UrlAInfo: &Info{
 			Method:      cfg.Method,
 			Url:         cfg.UrlA,
@@ -191,14 +186,14 @@ func (t *Task) runReader() {
 			logger.Debug(t.ctx, "Task_runReader Read line from file", zap.String("line", line))
 
 			if len(line) == 0 {
-				t.statisticsInfo.FailedCount++
+				t.statisticsInfo.AddFailed()
 				continue
 			}
 
 			payload := &Payload{}
 			err := sonic.Unmarshal([]byte(line), payload)
 			if err != nil {
-				t.statisticsInfo.FailedCount++
+				t.statisticsInfo.AddFailed()
 				logger.Error(t.ctx, "Task_runReader Failed to unmarshal payload", zap.String("line", line), zap.Error(err))
 				continue
 			}
@@ -251,7 +246,7 @@ func (t *Task) run() {
 
 			if urlBResponseErr != nil || urlAResponseErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to get response", zap.Any("payload", payload), zap.Any("urlAResponseErr", urlAResponseErr), zap.Any("urlBResponseErr", urlBResponseErr))
-				t.statisticsInfo.FailedCount++
+				t.statisticsInfo.AddFailed()
 				t.failedCH <- NewFailedOuyPut(payload, errors.New("failed to get response: "+cast.ToString(urlAResponseErr)+"; "+cast.ToString(urlBResponseErr)))
 				break SelectLoop
 			}
@@ -259,7 +254,7 @@ func (t *Task) run() {
 			if !t.responseSuccess(urlAResponse) || !t.responseSuccess(urlBResponse) {
 				logger.Error(t.ctx, "Task_run Response does not meet success conditions", zap.Any("payload", payload), zap.Any("urlAResponse", urlAResponse), zap.Any("urlBResponse", urlBResponse))
 				t.failedCH <- NewFailedOuyPut(payload, errors.New("response does not meet success conditions"))
-				t.statisticsInfo.FailedCount++
+				t.statisticsInfo.AddFailed()
 				break SelectLoop
 			}
 
@@ -272,7 +267,7 @@ func (t *Task) run() {
 					if err != nil {
 						logger.Error(t.ctx, "Task_run Failed to set field to nil in urlA response", zap.Any("response", urlAResponse), zap.Any("field", field), zap.Error(err))
 						t.failedCH <- NewFailedOuyPut(payload, err)
-						t.statisticsInfo.FailedCount++
+						t.statisticsInfo.AddFailed()
 						break SelectLoop
 					}
 					urlAResponseFieldMap[field] = urlAValue
@@ -280,7 +275,7 @@ func (t *Task) run() {
 					urlBValue, err := util.SetJsonFieldToNil(urlBResponse, field)
 					if err != nil {
 						t.failedCH <- NewFailedOuyPut(payload, err)
-						t.statisticsInfo.FailedCount++
+						t.statisticsInfo.AddFailed()
 						logger.Error(t.ctx, "Task_run Failed to set field to nil in urlB response", zap.Any("response", urlBResponse), zap.Any("field", field), zap.Error(err))
 						break SelectLoop
 					}
@@ -291,22 +286,22 @@ func (t *Task) run() {
 			diff := cmp.Diff(urlAResponse, urlBResponse)
 			if diff == "" {
 				t.outputCh <- &OutPut{Payload: payload, Diff: diff, UrlAResponse: nil, UrlBResponse: nil}
-				t.statisticsInfo.SuccessCount++
+				t.statisticsInfo.AddSuccess()
 				break SelectLoop
 			}
 
-			t.statisticsInfo.DiffCount++
+			t.statisticsInfo.AddDiff()
 
 			urlAErr := t.recoverFileValue(urlAResponse, urlAResponseFieldMap)
 			urlBErr := t.recoverFileValue(urlBResponse, urlBResponseFieldMap)
 			if urlAErr != nil || urlBErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to set field value in response", zap.Any("payload", payload), zap.Any("urlAErr", urlAErr), zap.Any("urlBErr", urlBErr))
 				t.failedCH <- NewFailedOuyPut(payload, errors.New("failed to set field value in response: "+cast.ToString(urlAErr)+"; "+cast.ToString(urlBErr)))
-				t.statisticsInfo.FailedCount++
+				t.statisticsInfo.AddFailed()
 				break SelectLoop
 			}
 
-			t.statisticsInfo.SuccessCount++
+			t.statisticsInfo.AddSuccess()
 			t.outputCh <- &OutPut{Payload: payload, Diff: diff, UrlAResponse: urlAResponse, UrlBResponse: urlBResponse}
 		}
 	}
@@ -421,11 +416,11 @@ func (t *Task) logStatisticsInfoLoop() {
 
 func (t *Task) logStatisticsInfo() {
 	logger.Info(t.ctx, "Task_logStatisticsInfo_"+t.Config.TaskName+":",
-		zap.Int("totalCount:", t.statisticsInfo.TotalCount),
-		zap.Int("successCount:", t.statisticsInfo.SuccessCount),
-		zap.Int("failedCount:", t.statisticsInfo.FailedCount),
-		zap.Int("diffCount", t.statisticsInfo.DiffCount),
-		zap.Float64("progress", float64(t.statisticsInfo.SuccessCount+t.statisticsInfo.FailedCount)/float64(t.statisticsInfo.TotalCount)*100))
+		zap.Int64("totalCount:", t.statisticsInfo.GetTotalCount()),
+		zap.Int64("successCount:", t.statisticsInfo.GetSuccessCount()),
+		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
+		zap.Int64("diffCount", t.statisticsInfo.GetDiffCount()),
+		zap.Float64("progress", float64(t.statisticsInfo.GetSuccessCount()+t.statisticsInfo.GetFailedCount())/float64(t.statisticsInfo.GetTotalCount())*100))
 }
 
 func (t *Task) responseSuccess(result interface{}) bool {
