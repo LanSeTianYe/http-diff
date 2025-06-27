@@ -318,11 +318,9 @@ func (t *Task) run() {
 			diff := cmp.Diff(urlAResponse, urlBResponse)
 			if diff == "" {
 				t.outputCh <- &OutPut{Payload: payload, Diff: diff, UrlAResponse: nil, UrlBResponse: nil}
-				t.statisticsInfo.AddSuccess()
+				t.statisticsInfo.AddSame()
 				break SelectLoop
 			}
-
-			t.statisticsInfo.AddDiff()
 
 			urlAErr := t.recoverFileValue(urlAResponse, urlAResponseFieldMap)
 			urlBErr := t.recoverFileValue(urlBResponse, urlBResponseFieldMap)
@@ -333,7 +331,7 @@ func (t *Task) run() {
 				break SelectLoop
 			}
 
-			t.statisticsInfo.AddSuccess()
+			t.statisticsInfo.AddDiff()
 			t.outputCh <- &OutPut{Payload: payload, Diff: diff, UrlAResponse: urlAResponse, UrlBResponse: urlBResponse}
 		}
 	}
@@ -449,10 +447,10 @@ func (t *Task) logStatisticsInfoLoop() {
 func (t *Task) logStatisticsInfo() {
 	logger.Info(t.ctx, "Task_logStatisticsInfo_"+t.Config.TaskName+":",
 		zap.Int64("totalCount:", t.statisticsInfo.GetTotalCount()),
-		zap.Int64("successCount:", t.statisticsInfo.GetSuccessCount()),
+		zap.Int64("sameCount:", t.statisticsInfo.GetSameCount()),
 		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
 		zap.Int64("diffCount", t.statisticsInfo.GetDiffCount()),
-		zap.Float64("progress", float64(t.statisticsInfo.GetSuccessCount()+t.statisticsInfo.GetFailedCount())/float64(t.statisticsInfo.GetTotalCount())*100))
+		zap.Float64("progress", float64(t.statisticsInfo.GetFailedCount()+t.statisticsInfo.GetSameCount()+t.statisticsInfo.GetDiffCount())/float64(t.statisticsInfo.GetTotalCount())*100))
 }
 
 func (t *Task) responseSuccess(result interface{}) bool {
