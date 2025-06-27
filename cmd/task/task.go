@@ -21,6 +21,8 @@ import (
 
 type Task struct {
 	ctx context.Context
+	// stopCh 用于通知任务停止
+	stopCh chan struct{}
 
 	// Config 任务配置
 	Config Config
@@ -92,6 +94,7 @@ func InitTask(ctx context.Context, cfg Config) (*Task, error) {
 
 	task := &Task{
 		ctx:                 ctx,
+		stopCh:              make(chan struct{}),
 		Config:              cfg,
 		SuccessConditionMap: make(map[string]string),
 		waitGroup:           &sync.WaitGroup{},
@@ -132,7 +135,6 @@ func (t *Task) Run() {
 
 	// 读文件
 	go t.runReader()
-	time.Sleep(time.Second)
 
 	// 处理请求
 	for i := 0; i < t.Config.Concurrency; i++ {
@@ -140,17 +142,32 @@ func (t *Task) Run() {
 	}
 
 	// 写结果
-	go t.writeOutputToFile()
+	go func() {
+		if err := t.writeOutputToFile(); err != nil {
+			t.stop()
+		}
+	}()
 
 	// 写错误数据
-	go t.writeFailedPayloadToFile()
+	go func() {
+		if err := t.writeFailedPayloadToFile(); err != nil {
+			t.stop()
+		}
+	}()
 
 	// 记录统计信息
 	if t.Config.LogStatistics {
 		go t.logStatisticsInfoLoop()
 	}
 
-	t.waitGroup.Wait()
+	// 等代任务运行完成
+	go func() {
+		t.waitGroup.Wait()
+		t.stop()
+	}()
+
+	// 等待任务结束信号
+	<-t.Done()
 
 	//任务运行结束的时候打印一次日志
 	if t.Config.LogStatistics {
@@ -329,14 +346,14 @@ func (t *Task) recoverFileValue(jsonData interface{}, valueMap map[string]interf
 }
 
 // writeOutputToFile 用于将输出结果写入文件
-func (t *Task) writeOutputToFile() {
+func (t *Task) writeOutputToFile() error {
 
 	outputFilePath := path.Join(t.Config.WorkDir, t.Config.TaskName+"_output.txt")
 
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		logger.Error(t.ctx, "Task_writeOutputToFile Failed to create output file", zap.String("outputFilePath", outputFilePath), zap.Error(err))
-		panic(err)
+		return err
 	}
 
 	defer outputFile.Close()
@@ -368,19 +385,19 @@ func (t *Task) writeOutputToFile() {
 			t.waitGroup.Done()
 		case <-t.ctx.Done():
 			logger.Debug(t.ctx, "Task_writeOutputToFile Context done, stopping writer", zap.Any("task", t))
-			return
+			return nil
 		}
 	}
 }
 
 // writeFailedPayloadToFile 用于将处理失败的 Payload 写入文件
-func (t *Task) writeFailedPayloadToFile() {
+func (t *Task) writeFailedPayloadToFile() error {
 
 	outputFilePath := path.Join(t.Config.WorkDir, t.Config.TaskName+"_failed_payload.txt")
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
 		logger.Error(t.ctx, "Task_writeFailedPayloadToFile Failed to create output file", zap.String("outputFilePath", outputFilePath), zap.Error(err))
-		panic(err)
+		return err
 	}
 
 	defer outputFile.Close()
@@ -406,7 +423,7 @@ func (t *Task) writeFailedPayloadToFile() {
 			t.waitGroup.Done()
 		case <-t.ctx.Done():
 			logger.Debug(t.ctx, "Task_writeFailedPayloadToFile Context done, stopping writer", zap.Any("task", t))
-			return
+			return nil
 		}
 	}
 }
@@ -450,6 +467,10 @@ func (t *Task) responseSuccess(result interface{}) bool {
 	return true
 }
 
-func (t *Task) afterDone() {
-	t.logStatisticsInfo()
+func (t *Task) stop() {
+	close(t.stopCh)
+}
+
+func (t *Task) Done() <-chan struct{} {
+	return t.stopCh
 }
