@@ -276,7 +276,6 @@ func (t *Task) run() {
 				logger.Error(t.ctx, "Task_run Failed to get response from UrlB", zap.Any("urlB", t.UrlBInfo), zap.Any("payload", payload), zap.Any("message", message))
 				urlBResponseErr = errors.New("failed to get response from UrlB: " + cast.ToString(message))
 			})
-
 			safeGoWaitGroup.Wait()
 
 			if urlAResponseErr != nil || urlBResponseErr != nil {
@@ -296,26 +295,24 @@ func (t *Task) run() {
 			urlAResponseFieldMap := make(map[string]interface{})
 			urlBResponseFieldMap := make(map[string]interface{})
 
-			if len(t.Config.IgnoreFields) != 0 {
-				for _, field := range t.Config.IgnoreFields {
-					urlAValue, err := util.SetJsonFieldToNil(urlAResponse, field)
-					if err != nil {
-						logger.Error(t.ctx, "Task_run Failed to set field to nil in urlA response", zap.Any("response", urlAResponse), zap.Any("field", field), zap.Error(err))
-						t.failedCH <- NewFailedOuyPut(payload, err)
-						t.statisticsInfo.AddFailed()
-						break SelectLoop
-					}
-					urlAResponseFieldMap[field] = urlAValue
-
-					urlBValue, err := util.SetJsonFieldToNil(urlBResponse, field)
-					if err != nil {
-						t.failedCH <- NewFailedOuyPut(payload, err)
-						t.statisticsInfo.AddFailed()
-						logger.Error(t.ctx, "Task_run Failed to set field to nil in urlB response", zap.Any("response", urlBResponse), zap.Any("field", field), zap.Error(err))
-						break SelectLoop
-					}
-					urlBResponseFieldMap[field] = urlBValue
+			for _, field := range t.Config.IgnoreFields {
+				urlAValue, err := util.SetJsonFieldToNil(urlAResponse, field)
+				if err != nil {
+					logger.Error(t.ctx, "Task_run Failed to set field to nil in urlA response", zap.Any("response", urlAResponse), zap.Any("field", field), zap.Error(err))
+					t.failedCH <- NewFailedOuyPut(payload, err)
+					t.statisticsInfo.AddFailed()
+					break SelectLoop
 				}
+				urlAResponseFieldMap[field] = urlAValue
+
+				urlBValue, err := util.SetJsonFieldToNil(urlBResponse, field)
+				if err != nil {
+					t.failedCH <- NewFailedOuyPut(payload, err)
+					t.statisticsInfo.AddFailed()
+					logger.Error(t.ctx, "Task_run Failed to set field to nil in urlB response", zap.Any("response", urlBResponse), zap.Any("field", field), zap.Error(err))
+					break SelectLoop
+				}
+				urlBResponseFieldMap[field] = urlBValue
 			}
 
 			diff := cmp.Diff(urlAResponse, urlBResponse)
