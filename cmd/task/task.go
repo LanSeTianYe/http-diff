@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/spf13/cast"
+	"http-diff/lib/safe"
 	"os"
 	"path"
 	"strings"
@@ -23,6 +24,8 @@ type Task struct {
 	ctx context.Context
 	// stopCh 用于通知任务停止
 	stopCh chan struct{}
+	// stopChOnce 用于确保 stopCh 只被关闭一次
+	stopChOnce *sync.Once
 
 	// Config 任务配置
 	Config Config
@@ -93,8 +96,10 @@ func InitTask(ctx context.Context, cfg Config) (*Task, error) {
 	}
 
 	task := &Task{
-		ctx:                 ctx,
-		stopCh:              make(chan struct{}),
+		ctx:        ctx,
+		stopCh:     make(chan struct{}),
+		stopChOnce: &sync.Once{},
+
 		Config:              cfg,
 		SuccessConditionMap: make(map[string]string),
 		waitGroup:           &sync.WaitGroup{},
@@ -134,31 +139,31 @@ func (t *Task) Run() {
 	logger.Info(t.ctx, "Task_Run Start running task", zap.Any("task", t))
 
 	// 读文件
-	go t.runReader()
+	go safe.RecoveryWithLoggerAndCallback(t.runReader, t.ctx, "Task_Run_runReader", func() { t.stop() })
 	time.Sleep(time.Second * 2) // 等待文件读取完成，避免在文件读取过程中就开始处理请求
 
 	// 处理请求
 	for i := 0; i < t.Config.Concurrency; i++ {
-		go t.run()
+		go safe.RecoveryWithLoggerAndCallback(t.run, t.ctx, "Task_Run_run", func() { t.stop() })
 	}
 
 	// 写结果
-	go func() {
+	go safe.RecoveryWithLoggerAndCallback(func() {
 		if err := t.writeOutputToFile(); err != nil {
 			t.stop()
 		}
-	}()
+	}, t.ctx, "Task_Run_writeOutputToFile", func() { t.stop() })
 
 	// 写错误数据
-	go func() {
+	go safe.RecoveryWithLoggerAndCallback(func() {
 		if err := t.writeFailedPayloadToFile(); err != nil {
 			t.stop()
 		}
-	}()
+	}, t.ctx, "Task_Run_writeFailedPayloadToFile", func() { t.stop() })
 
 	// 记录统计信息
 	if t.Config.LogStatistics {
-		go t.logStatisticsInfoLoop()
+		go safe.RecoveryWithLoggerAndCallback(t.logStatisticsInfoLoop, t.ctx, "Task_Run_logStatisticsInfoLoop", func() { t.stop() })
 	}
 
 	// 等代任务运行完成
@@ -179,7 +184,6 @@ func (t *Task) Run() {
 }
 
 func (t *Task) runReader() {
-
 	payLoadFiles := strings.Split(t.Config.Payload, ",")
 
 	logger.Info(t.ctx, "Task_runReader Starting to read payload files", zap.Strings("files", payLoadFiles))
@@ -469,7 +473,9 @@ func (t *Task) responseSuccess(result interface{}) bool {
 }
 
 func (t *Task) stop() {
-	close(t.stopCh)
+	t.stopChOnce.Do(func() {
+		close(t.stopCh)
+	})
 }
 
 func (t *Task) Done() <-chan struct{} {

@@ -53,7 +53,6 @@ func NewDispatcher(ctx context.Context, diffConfigs []config.DiffConfig) (*Dispa
 }
 
 func (d *Dispatcher) Start() {
-
 	logger.Info(d.ctx, "Dispatcher started", zap.Any("dispatcher", d))
 
 	for _, task := range d.tasks {

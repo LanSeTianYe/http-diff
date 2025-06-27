@@ -6,6 +6,7 @@ import (
 	"http-diff/lib/config"
 	"http-diff/lib/http"
 	"http-diff/lib/logger"
+	"http-diff/lib/safe"
 	"http-diff/lib/signal"
 
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ var startCmd = &cobra.Command{
 	Short: "开始运行数据对比任务",
 	Long:  "开始运行数据对比任务",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		
+
 		if err := config.Init(configFile, cfg); err != nil {
 			return err
 		}
@@ -52,7 +53,7 @@ var startCmd = &cobra.Command{
 		}
 
 		// 启动任务
-		go dispatcher.Start()
+		go safe.RecoveryWithLogger(dispatcher.Start, ctx, "Dispatcher_Start")
 
 		//等待程序运行结束或者接收到终止信号
 		select {
