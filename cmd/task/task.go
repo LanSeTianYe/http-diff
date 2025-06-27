@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/spf13/cast"
+	"http-diff/lib/concurrency"
 	"http-diff/lib/safe"
 	"os"
 	"path"
@@ -256,25 +257,27 @@ func (t *Task) run() {
 				time.Sleep(t.Config.WaitTime)
 			}
 
-			waitGroup := sync.WaitGroup{}
-
 			var urlAResponse interface{}
 			var urlAResponseErr error
 			var urlBResponse interface{}
 			var urlBResponseErr error
 
-			waitGroup.Add(1)
-			go func() {
+			safeGoWaitGroup := concurrency.NewSafeGoWaitGroup()
+			safeGoWaitGroup.SafeGoWithLogger(func() {
 				urlAResponse, urlAResponseErr = DoRequest(t.ctx, t.UrlAInfo, payload)
-				waitGroup.Done()
-			}()
+			}, func(message any) {
+				logger.Error(t.ctx, "Task_run Failed to get response from UrlA", zap.Any("urlA", t.UrlAInfo), zap.Any("payload", payload), zap.Any("message", message))
+				urlAResponseErr = errors.New("failed to get response from UrlA: " + cast.ToString(message))
+			})
 
-			waitGroup.Add(1)
-			go func() {
+			safeGoWaitGroup.SafeGoWithLogger(func() {
 				urlBResponse, urlBResponseErr = DoRequest(t.ctx, t.UrlBInfo, payload)
-				waitGroup.Done()
-			}()
-			waitGroup.Wait()
+			}, func(message any) {
+				logger.Error(t.ctx, "Task_run Failed to get response from UrlB", zap.Any("urlB", t.UrlBInfo), zap.Any("payload", payload), zap.Any("message", message))
+				urlBResponseErr = errors.New("failed to get response from UrlB: " + cast.ToString(message))
+			})
+
+			safeGoWaitGroup.Wait()
 
 			if urlAResponseErr != nil || urlBResponseErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to get response", zap.Any("payload", payload), zap.Any("urlAResponseErr", urlAResponseErr), zap.Any("urlBResponseErr", urlBResponseErr))
