@@ -49,10 +49,17 @@ success_conditions = "stat=1"
 go build -o http-diff main.go
 ```
 
-2. 第二步，运行程序
+2. 第二部，根据需要修改配置文件 `config.toml`。
+
+
+3. 第三步，运行程序
 
 ```shell
+# 使用默认配置文件
 ./http-diff start
+# 使用指定配置文件
+./http-diff start -c ./config/config.toml
+
 ```
 
 ## todo
