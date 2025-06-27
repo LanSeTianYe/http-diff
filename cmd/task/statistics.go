@@ -5,16 +5,13 @@ import "sync/atomic"
 type StatisticsInfo struct {
 	TotalCount int64
 
-	//successCount *atomic.Int64
-	successCount *atomic.Int64
-
-	//failedCount *atomic.Int64
+	//failedCount 失败的数量
 	failedCount *atomic.Int64
 
-	//diffCount *atomic.Int64
+	//diffCount 有diff的数量
 	diffCount *atomic.Int64
 
-	//sameCount *atomic.Int64
+	//sameCount 没有diff的数量
 	sameCount *atomic.Int64
 }
 
