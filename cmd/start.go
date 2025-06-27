@@ -56,7 +56,7 @@ var startCmd = &cobra.Command{
 		select {
 		case <-dispatcher.Done():
 			logger.Info(ctx, "http-diff stopped, all tasks completed")
-		case sig := <-signal.GetShutdownChannel():
+		case sig := <-signal.ReceiveShutdownSignal():
 			logger.Info(ctx, "http-diff received shutdown signal", zap.String("signal", sig.String()))
 		}
 
