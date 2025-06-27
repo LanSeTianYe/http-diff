@@ -119,7 +119,7 @@ func InitTask(ctx context.Context, cfg Config) (*Task, error) {
 				task.SuccessConditionMap[parts[0]] = parts[1]
 			} else {
 				logger.Error(ctx, "InitTask Invalid success condition format", zap.String("condition", condition))
-				panic(errors.New("invalid success condition failed. conditions: " + cfg.SuccessConditions))
+				return nil, errors.New("invalid success condition format: " + condition)
 			}
 		}
 	}
@@ -180,13 +180,23 @@ func (t *Task) runReader() {
 		buffer := make([]byte, 0, maxLineSize)
 		scanner := bufio.NewScanner(file)
 		scanner.Buffer(buffer, maxLineSize)
+		lineNumber := 0
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			logger.Debug(t.ctx, "Task_runReader Read line from file", zap.String("line", line))
+			lineNumber++
+
+			logger.Debug(t.ctx, "Task_runReader Read line from file", zap.String("line", line), zap.Int("lineNumber", lineNumber))
 
 			if len(line) == 0 {
 				t.statisticsInfo.AddFailed()
+				logger.Error(t.ctx, "Task_runReader Empty line in file", zap.String("filePath", filePath), zap.Int("lineNumber", lineNumber))
+				continue
+			}
+
+			if err := scanner.Err(); err != nil {
+				t.statisticsInfo.AddFailed()
+				logger.Error(t.ctx, "Task_runReader Error reading file", zap.String("filePath", filePath), zap.Int("lineNumber", lineNumber), zap.Error(err))
 				continue
 			}
 
@@ -194,7 +204,7 @@ func (t *Task) runReader() {
 			err := sonic.Unmarshal([]byte(line), payload)
 			if err != nil {
 				t.statisticsInfo.AddFailed()
-				logger.Error(t.ctx, "Task_runReader Failed to unmarshal payload", zap.String("line", line), zap.Error(err))
+				logger.Error(t.ctx, "Task_runReader Failed to unmarshal payload", zap.String("line", line), zap.Int("lineNumber", lineNumber), zap.Error(err))
 				continue
 			}
 

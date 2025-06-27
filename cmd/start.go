@@ -31,8 +31,10 @@ var startCmd = &cobra.Command{
 	Short: "开始运行数据对比任务",
 	Long:  "开始运行数据对比任务",
 	RunE: func(cmd *cobra.Command, args []string) error {
-
-		config.Init(configFile, cfg)
+		
+		if err := config.Init(configFile, cfg); err != nil {
+			return err
+		}
 
 		logger.Init("Http-Diff", cfg.LoggerConfig)
 

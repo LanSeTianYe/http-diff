@@ -8,13 +8,12 @@ import (
 )
 
 // Init 初始化配置，把配置文件解析到结构体中
-func Init(configFile string, configStruct any) {
+func Init(configFile string, configStruct any) error {
 	viper.SetConfigFile(configFile)
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return fmt.Errorf("read config file error, config file:%s, err: %w", configFile, err)
 	}
 
 	viperHookFunc := mapstructure.ComposeDecodeHookFunc(
@@ -26,9 +25,10 @@ func Init(configFile string, configStruct any) {
 
 	err = viper.Unmarshal(configStruct, viper.DecodeHook(viperHookFunc))
 	if err != nil {
-		fmt.Println("Init Config error, err: " + err.Error())
-		panic(err)
+		return fmt.Errorf("unmarshal config file error, config file:%s, config data:%v, err: %w", configFile, configStruct, err)
 	}
 
 	fmt.Printf("config info, config path:%#v, config:%#v\n", configFile, configStruct)
+	
+	return nil
 }
