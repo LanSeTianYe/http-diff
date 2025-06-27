@@ -18,11 +18,11 @@ import (
 var configFile = ""
 
 func init() {
-	initDiffFlag()
+	initStartFlag()
 	rootCmd.AddCommand(startCmd)
 }
 
-func initDiffFlag() {
+func initStartFlag() {
 	flags := startCmd.PersistentFlags()
 
 	flags.StringVarP(&configFile, "config", "c", "./config/config.toml", "配置文件")
