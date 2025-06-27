@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"http-diff/cmd/task"
-	"http-diff/global"
 	"http-diff/lib/config"
 	"http-diff/lib/http"
 	"http-diff/lib/logger"
@@ -16,6 +15,7 @@ import (
 )
 
 var configFile = ""
+var cfg = &config.Configs{}
 
 func init() {
 	initStartFlag()
@@ -34,16 +34,16 @@ var startCmd = &cobra.Command{
 	Long:  "开始运行数据对比任务",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		config.Init(configFile, global.Configs)
+		config.Init(configFile, cfg)
 
-		logger.Init("Http-Diff", global.Configs.LoggerConfig)
+		logger.Init("Http-Diff", cfg.LoggerConfig)
 
-		http.Init(global.Configs.FastHttp)
+		http.Init(cfg.FastHttp)
 
 		ctx, cancelFunc := context.WithCancel(context.Background())
 		logger.Info(ctx, "http-diff started")
 
-		dispatcher, err := task.NewDispatcher(ctx, global.Configs.DiffConfigs)
+		dispatcher, err := task.NewDispatcher(ctx, cfg.DiffConfigs)
 		if err != nil {
 			logger.Error(ctx, "failed to create task dispatcher", zap.Error(err))
 			cancelFunc()
