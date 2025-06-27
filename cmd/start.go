@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
-
 	"http-diff/cmd/task"
 	"http-diff/lib/config"
 	"http-diff/lib/http"
@@ -32,7 +30,7 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "开始运行数据对比任务",
 	Long:  "开始运行数据对比任务",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		config.Init(configFile, cfg)
 
@@ -41,28 +39,18 @@ var startCmd = &cobra.Command{
 		http.Init(cfg.FastHttp)
 
 		ctx, cancelFunc := context.WithCancel(context.Background())
+		defer cancelFunc()
+
 		logger.Info(ctx, "http-diff started")
 
 		dispatcher, err := task.NewDispatcher(ctx, cfg.DiffConfigs)
 		if err != nil {
 			logger.Error(ctx, "failed to create task dispatcher", zap.Error(err))
-			cancelFunc()
-			return
+			return err
 		}
 
 		// 启动任务
 		go dispatcher.Start()
-
-		// 如果任务执行结束，则结束进程
-		go func() {
-			<-dispatcher.Done()
-
-			cancelFunc()
-
-			logger.Info(ctx, "http-diff stopped, all tasks completed")
-
-			os.Exit(0)
-		}()
 
 		//等待程序运行结束或者接收到终止信号
 		select {
@@ -72,8 +60,6 @@ var startCmd = &cobra.Command{
 			logger.Info(ctx, "http-diff received shutdown signal", zap.String("signal", sig.String()))
 		}
 
-		logger.Info(ctx, "http-diff stopped, received shutdown signal")
-		cancelFunc()
-		os.Exit(0)
+		return nil
 	},
 }
