@@ -451,8 +451,8 @@ func (t *Task) logStatisticsInfo() {
 	logger.Info(t.ctx, "Task_logStatisticsInfo_"+t.Config.TaskName+":",
 		zap.Int64("totalCount:", t.statisticsInfo.GetTotalCount()),
 		zap.Int64("sameCount:", t.statisticsInfo.GetSameCount()),
-		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
 		zap.Int64("diffCount", t.statisticsInfo.GetDiffCount()),
+		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
 		zap.Float64("progress", float64(t.statisticsInfo.GetFailedCount()+t.statisticsInfo.GetSameCount()+t.statisticsInfo.GetDiffCount())/float64(t.statisticsInfo.GetTotalCount())*100))
 }
 
