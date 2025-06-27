@@ -239,12 +239,12 @@ func (t *Task) run() {
 
 			waitGroup.Add(1)
 			go func() {
-				urlBResponse, urlAResponseErr = DoRequest(t.ctx, t.UrlBInfo, payload)
+				urlBResponse, urlBResponseErr = DoRequest(t.ctx, t.UrlBInfo, payload)
 				waitGroup.Done()
 			}()
 			waitGroup.Wait()
 
-			if urlBResponseErr != nil || urlAResponseErr != nil {
+			if urlAResponseErr != nil || urlBResponseErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to get response", zap.Any("payload", payload), zap.Any("urlAResponseErr", urlAResponseErr), zap.Any("urlBResponseErr", urlBResponseErr))
 				t.statisticsInfo.AddFailed()
 				t.failedCH <- NewFailedOuyPut(payload, errors.New("failed to get response: "+cast.ToString(urlAResponseErr)+"; "+cast.ToString(urlBResponseErr)))
