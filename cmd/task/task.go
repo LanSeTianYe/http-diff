@@ -135,6 +135,7 @@ func (t *Task) Run() {
 
 	// 读文件
 	go t.runReader()
+	time.Sleep(time.Second * 2) // 等待文件读取完成，避免在文件读取过程中就开始处理请求
 
 	// 处理请求
 	for i := 0; i < t.Config.Concurrency; i++ {

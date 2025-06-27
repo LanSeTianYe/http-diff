@@ -2,11 +2,10 @@ package task
 
 import (
 	"context"
-	"strings"
-	"sync"
-
+	"http-diff/lib/concurrency"
 	"http-diff/lib/config"
 	"http-diff/lib/logger"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -20,8 +19,8 @@ type Dispatcher struct {
 	// tasks 存储所有的任务
 	tasks []*Task
 
-	// waitGroup 用于等待所有任务完成
-	waitGroup *sync.WaitGroup
+	// safeGoWaitGroup 用于安全地启动 goroutine
+	safeGoWaitGroup *concurrency.SafeGoWaitGroup
 
 	// done channel 用于通知任务完成
 	done chan struct{}
@@ -30,10 +29,10 @@ type Dispatcher struct {
 func NewDispatcher(ctx context.Context, diffConfigs []config.DiffConfig) (*Dispatcher, error) {
 
 	dispatcher := &Dispatcher{
-		ctx:       context.Background(),
-		tasks:     make([]*Task, 0, len(diffConfigs)),
-		waitGroup: &sync.WaitGroup{},
-		done:      make(chan struct{}),
+		ctx:             context.Background(),
+		tasks:           make([]*Task, 0, len(diffConfigs)),
+		safeGoWaitGroup: concurrency.NewSafeGoWaitGroup(),
+		done:            make(chan struct{}),
 	}
 
 	for _, diffConfig := range diffConfigs {
@@ -58,15 +57,13 @@ func (d *Dispatcher) Start() {
 	logger.Info(d.ctx, "Dispatcher started", zap.Any("dispatcher", d))
 
 	for _, task := range d.tasks {
-		d.waitGroup.Add(1)
-		go func(taskParam *Task) {
-			taskParam.Run()
-			d.waitGroup.Done()
-		}(task)
+		d.safeGoWaitGroup.SafeGoWithLogger(task.Run, func(message any) {
+			logger.Error(d.ctx, "Dispatcher task panic", zap.Any("task", task), zap.Any("message", message))
+		})
 	}
 
 	//等待任务结束
-	d.waitGroup.Wait()
+	d.safeGoWaitGroup.Wait()
 
 	logger.Info(d.ctx, "Dispatcher stopped", zap.Any("dispatcher", d))
 
