@@ -64,7 +64,13 @@ var startCmd = &cobra.Command{
 			os.Exit(0)
 		}()
 
-		signal.BlockWaitSignal(ctx)
+		//等待程序运行结束或者接收到终止信号
+		select {
+		case <-dispatcher.Done():
+			logger.Info(ctx, "http-diff stopped, all tasks completed")
+		case sig := <-signal.GetShutdownChannel():
+			logger.Info(ctx, "http-diff received shutdown signal", zap.String("signal", sig.String()))
+		}
 
 		logger.Info(ctx, "http-diff stopped, received shutdown signal")
 		cancelFunc()
