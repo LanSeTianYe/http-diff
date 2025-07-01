@@ -61,22 +61,22 @@
 
 ### 如何使用
 
-1. 第一步，拉去项目。
+1. 第一步，拉取项目。
 
 ```shell
 git clone https://github.com/LanSeTianYe/http-diff.git
 ```
 
-2. 第二步，先构建项目
+2. 第二步，构建项目。
 
 ```shell
 cd http-diff && go mod tidy && go build -o http-diff main.go
 ```
 
-3. 第二部，根据需要修改配置文件 `config.toml`。
+3. 第二部，根据需要修改配置文件 [./config/config.toml](./config/config.toml)。
 
 
-4. 第三步，运行程序
+4. 第三步，运行程序。
 
 ```shell
 # 默认配置文件
@@ -88,5 +88,4 @@ cd http-diff && go mod tidy && go build -o http-diff main.go
 ## todo
 
 * POST 请求的ContentType梳理，现在的逻辑是不是有什么确实。
-* 删除日志统计信息开关。
-* 输出信息文件。
+
