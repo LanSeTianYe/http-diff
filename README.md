@@ -2,52 +2,61 @@
 
 ### 简介
 
-`Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。
+`Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。目前只支持响应数据是 `JSON` 格式的接口。
 
-从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据。对比结果会放在工作目录的 `{任务名}_output.txt` 文件中。出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
 
-`payload` 文件和错误信息文件内容对比：
+
+**运行流程：**
+
+第一步：读取参数。从 `paylaod` 参数指定的文件中读取参数。
+
+第二步：发送请求并对比结果。向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据。
+
+第三部：输出结果并记录错误。
+
+* 对比结果会放在工作目录的 `{任务名}_output.txt` 文件中。
+* 出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中。错误信息文件和 `payload` 文件格式一致，可以当作输入复用。
+
+**`payload` 文件内容：**
 
 ```json
-# payload 文件
 {"params": "", "headers": "", "body":"{\"ids\":\"123\"}"}
-
-# 错误信息文件，只多了一个 err 字段
-{"params":"","headers":"","body":"{\"ids\":\"123\"}","err":"failed to get response: error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused; error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused"}
 ```
 
-目前只支持响应数据是 `JSON` 格式的接口。
+**对比结果文件内容：**
+
+```
+{"payload":{"params":"","headers":"","body":"{\"ids\":\"123\"}"},"urlAResponse":null,"urlBResponse":null,"diff":""}
+```
+
+**错误信息文件内容：**
+
+```json
+{"params":"","headers":"","body":"{\"ids\":\"123\"}","err":"failed to get response: error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused; error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused"}
+```
 
 #### 参数介绍
 
 
 |参数名字|含义|是否必须|默认值|
 |:----|:----|:----|:----|
-|name|任务名字|是|无|
-|concurrency|并发数量，设置为 `n` 会有 `n` 个协程同时处理该任务。当配置值小于等于 `0` 时，会使用默认值。|是|1|
+|name|任务名。|是|无|
+|concurrency|并发数量，设置为 `n` 会有 `n` 个协程同时处理该任务。当配置值小于等于 `0` 时，会使用默认值 `1`。|是|1|
 |wait_time|完成一个请求后等待多长时间再发起下一次请求。可以用来限制请求频率。 每个协程在处理完任务后都会等待配置的时间。|否|0|
-|work_dir|工作目录，任务的工作目录，会从该目录读取请求参数，输出对比结果和错误信息。对比结果和错误信息会被输出到任务名字开头的文件中。<br>对比信息会被记录到 `{任务名}_output.txt` 文件中。<br>错误信息会被记录到 `{任务名}_failed_payload.txt` 文件中，错误信息内容和 `payload` 文件格式一致，可以复用。|是|无|
+|work_dir|工作目录，任务的工作目录，会从该目录读取请求参数，输出对比结果和错误信息。对比结果和错误信息会被输出到任务名字开头的文件中。<br>对比信息会被记录到 `{任务名}_output.txt` 文件中。<br>错误信息会被记录到 `{任务名}_failed_payload.txt` 文件中。|是|无|
 |payload|参数文件，每一行是一个请求的参数信息，格式为 `Json`。可以设置三种请求信息：`URL` 参数、`RequestHeader` 和 `RequestBody` 。注意一个请求的参数占一行，同一个请求的参数不要换行。如果参数为空可以把每一行都设置为 `{}`。|是|无|
 |url_a|请求 `A` 的 `URL` 地址。|是|无|
 |url_b|请求 `B` 的 `URL` 地址。|是|无|
 |method|请求方法。支持 `GET` 和 `POST`。|是|无|
 |content_type|指定请求内容的类型。对于 `POST` 请求，当请求的类型为 `application/x-www-form-urlencoded` 的 `Form` 表单请求时候需要指定，其余情况参数会被当成 `JSON` 类型。`payload` 文件里面如果也指定了 `Content-Type` 则以 `payload` 文件里面的为准。|否|空|
-|ignore_fields|忽略字段。在 `diff` 的时候会忽略该字段，多个用英文逗号分隔。只支持忽略结构体中的单个属性，不支持忽略数组元素中的单个属性。示例： `a`、`a.b`、`a,b.c`。|否|空|
+|ignore_fields|忽略字段。在 `diff` 的时候会忽略该字段，多个用英文逗号分隔。只支持忽略结构体中的单个属性，不支持忽略数组元素中的属性。示例： `a`、`a.b`、`a,b.c`。|否|空|
 |output_show_no_diff_line|是否在输出文件中记录两个接口返回数据完全一致的行。默认不展示。|否|false|
-|log_statistics|是否在日志中打印任务统计信息。可以在日志记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度。<br> 查看命令：`tail 日志文件 |grep "Task_logStatisticsInfo_"`|否|false|
-|success_conditions|用于通过响应数据的字段判断请求是否成功，多个用英文逗号分隔。只支持判断结构体中的单个属性，不支持判断数组元素中的单个属性。示例：`stat=1`、`stat=1,code=2`。|否|空|
+|log_statistics|是否在日志中打印任务统计信息。开启后在日志中记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度等数据<br> 查看命令：`tail 日志文件 |grep "Task_logStatisticsInfo_"`|否|false|
+|success_conditions|用于通过响应数据的字段判断请求是否成功，多个用英文逗号分隔。只支持判断结构体中的单个属性，不支持判断数组元素中的属性。示例：`stat=1`、`stat=1,code=2`。|否|空|
 
 **`payload` 参数示例：**
 
 ```json
-{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
-```
-
-**`payload` 文件示例：**
-
-```json
-{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
-{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
 ```
 
@@ -84,8 +93,4 @@ cd http-diff && go mod tidy && go build -o http-diff main.go
 # 指定配置文件
 ./http-diff start -c ./config/config.toml
 ```
-
-## todo
-
-* POST 请求的ContentType梳理，现在的逻辑是不是有什么确实。
 
