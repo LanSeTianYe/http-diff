@@ -91,15 +91,15 @@ func DoRequest(ctx context.Context, taskInfo *Info, payload *Payload) (interface
 func initHeader(taskInfo *Info, payload *Payload) (map[string]string, error) {
 	result := make(map[string]string)
 
+	if taskInfo.ContentType != "" {
+		result[constant.HeaderKeyContextType] = taskInfo.ContentType
+	}
+
 	if payload.Headers != "" {
 		err := sonic.Unmarshal([]byte(payload.Headers), &result)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if taskInfo.ContentType != "" {
-		result[constant.HeaderKeyContextType] = taskInfo.ContentType
 	}
 
 	return result, nil
