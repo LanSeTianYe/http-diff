@@ -4,8 +4,6 @@
 
 `Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。目前只支持响应数据是 `JSON` 格式的接口。
 
-
-
 **运行流程：**
 
 第一步：读取参数。从 `paylaod` 参数指定的文件中读取参数。
@@ -51,7 +49,7 @@
 |content_type|指定请求内容的类型。对于 `POST` 请求，当请求的类型为 `application/x-www-form-urlencoded` 的 `Form` 表单请求时候需要指定，其余情况参数会被当成 `JSON` 类型。`payload` 文件里面如果也指定了 `Content-Type` 则以 `payload` 文件里面的为准。|否|空|
 |ignore_fields|忽略字段。在 `diff` 的时候会忽略该字段，多个用英文逗号分隔。只支持忽略结构体中的单个属性，不支持忽略数组元素中的属性。示例： `a`、`a.b`、`a,b.c`。|否|空|
 |output_show_no_diff_line|是否在输出文件中记录两个接口返回数据完全一致的行。默认不展示。|否|false|
-|log_statistics|是否在日志中打印任务统计信息。开启后在日志中记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度等数据<br> 查看命令：`tail 日志文件 |grep "Task_logStatisticsInfo_"`|否|false|
+|log_statistics|是否在日志中打印任务统计信息。开启后在日志中记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度等数据。查看命令在下面。|否|false|
 |success_conditions|用于通过响应数据的字段判断请求是否成功，多个用英文逗号分隔。只支持判断结构体中的单个属性，不支持判断数组元素中的属性。示例：`stat=1`、`stat=1,code=2`。|否|空|
 
 **`payload` 参数示例：**
@@ -65,6 +63,12 @@
 * `params`：拼接在 `URL` 后面的参数，需进行 `URL` 编码，例如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
 * `headers`：请求的 `HTTP` 头，格式为 `JSON`，需要数据进行` JSON 转义`，例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
 * `body`：请求的请求体，格式为 `JSON`，需要数据进行 `JSON` 转义，用于 `POST` 请求。
+
+**统计信息查看命令：**
+
+```shell
+tail -f 日志文件 | `grep "Task_logStatisticsInfo_"`
+```
 
 
 
