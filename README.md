@@ -1,67 +1,92 @@
 ## Http Diff
 
-Http Diff 是一个用于对比接口响应数据的工具，使用相同参数分别调用接口A、接口B，然后对两个接口的响应数据进行 Diff，最终输出对比结果。
+### 简介
 
-### 支持的功能
+`Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。
 
-通过配置文件指定任务执行信息，如：
+从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据，对比结果会放在工作目录的 `{任务名}_output.txt` 文件中，运行过程中出错的请求会被记录到 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
 
-```toml
-[[diff_configs]]
-name = "task_1"
-concurrency = 1
-wait_time = "1000ms"
-work_dir = "./data"
-payload = "payload_task_1.txt"
-url_a = "http://127.0.0.1:8080/ping"
-url_b = "http://127.0.0.1:8080/ping"
-method = "POST"
-content_type = "application/json"
-ignore_fields = "trace_id"
-output_show_no_diff_line = true
-log_statistics = true
-success_conditions = "stat=1"
+`payload` 文件和错误信息文件数据对比：
+
+```json
+# payload 文件
+{"params": "", "headers": "", "body":"{\"ids\":\"123\"}"}
+
+# 错误信息文件，只多了一个 err 字段
+{"params":"","headers":"","body":"{\"ids\":\"123\"}","err":"failed to get response: error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused; error when dialing 127.0.0.1:8080: dial tcp4 127.0.0.1:8080: connect: connection refused"}
 ```
 
-* 多任务同时运行，通过在配置文件中配置多个任务支持多个任务同时运行。
-* 支持并发请求，通过配置文件中的 `concurrency` 参数设置每个任务的并发数。
-* 限流支持，通过配置文件中的 `wait_time` 参数设置每次请求完成后等待的时间。
-* 支持设置工作目录，通过配置文件中的 `work_dir` 参数设置工作目录，建议每个任务设置一个工作目录。
-* 支持请求参数文件，通过配置文件中的 `payload` 参数指定请求参数文件。每行代表一个请求的参数信息，JSON 格式。
-  * params：指定拼接在 URL 后面的参数，需进行 URL 编码，比如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
-  * headers：指定请求的 HTTP 头，格式为 JSON，需要数据进行 JSON 转义，比如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
-  * body：指定请求的请求体，用于 POST 请求。
-  * 一个完整的请求示例：`{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}`。
-* 支持设置请求的 URL，通过配置文件中的 `url_a` 和 `url_b` 参数分别指定两个接口的URL。
-* 支持指定 HTTP 请求的 Method，目前支持 GET 和 POST。
-* 支持设置请求的 Content-Type，通过配置文件中的 `content_type` 参数指定请求的内容类型，默认为空。
-* 支持设置忽略的字段，设置后相应字段在对比时会被忽略，支持多级，但不支持设置忽略数组中的字段。通过配置文件中的 `ignore_fields` 参数指定在对比响应数据时忽略的字段，多个字段用逗号分隔。
-* 支持设置是否在输出文件中记录没有差异的行，通过配置文件中的 `output_show_no_diff_line` 参数设置，默认为 `false`。
-* 支持设置是否在日志中记录统计信息，通过配置文件中的 `log_statistics` 参数设置，默认为 `false`。
-  * 可以通过命令：`cat 日志文件 | grep "Task_logStatisticsInfo_"` 查看统计信息。
-* 支持设置成功条件，通过配置文件中的 `success_conditions` 参数设置，多个条件用逗号分隔。每个条件格式为 `key1=value1,key2=value2`，表示响应数据中必须包含该键值对才能认为请求成功。
+目前只支持响应数据是 `JSON` 格式的接口。
+
+#### 参数介绍
+
+|参数名字|含义|是否必须|默认值|
+|::|::|::|--|
+|name|任务名字。|是|无|
+|concurrency|并发数量，设置为 `n` 会有 `n` 个协程同时处理该任务。当配置值小于等于 `0` 时，会使用默认值。|是|1|
+|wait_time|完成一个请求后等待多长时间再发起下一次请求。可以用来限制请求频率。 每个协程在处理完任务后都会等待配置的时间。|否|0|
+|work_dir|工作目录，任务的工作目录，会从该目录读取请求参数，输出对比结果和错误信息。对比结果和错误信息会被输出到任务名字开头的文件中。<br>对比信息会被记录到 `{任务名}_output.txt` 文件中。<br>错误信息会被记录到 `{任务名}_failed_payload.txt` 文件中，错误信息内容和 `payload` 文件格式一致，可以复用。|是|无|
+|payload|参数文件，每一行是一个请求的参数信息，格式为 `Json`。可以设置三种请求信息：`URL` 参数、`RequestHeader` 和 `RequestBody` 。注意一个请求的参数占一行，同一个请求的参数不要换行。如果参数为空可以把每一行都设置为 `{}`。|是|无|
+|url_a|请求 `A` 的 `URL` 地址。|是|无|
+|url_b|请求 `B` 的 `URL` 地址。|是|无|
+|method|请求方法。支持 `GET` 和 `POST`。|是|无|
+|content_type|指定请求内容的类型。对于 `POST` 请求，当请求的类型为 `application/x-www-form-urlencoded` 的 `Form` 表单请求时候需要指定，其余情况参数会被当成 `JSON` 类型。`payload` 文件里面如果也指定了 `Content-Type` 则以 `payload` 文件里面的为准。|否|空|
+|ignore_fields|忽略字段。在 `diff` 的时候会忽略该字段，多个用英文逗号分隔。只支持忽略结构体中的单个属性，不支持忽略数组元素中的单个属性。示例： `a`、`a.b`、`a,b.c`。|否|空|
+|output_show_no_diff_line|是否在输出文件中记录两个接口返回数据完全一致的行。默认不展示。|否|false|
+|log_statistics|是否在日志中打印任务统计信息。可以在日志记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度。<br> 查看命令：`tail 日志文件 |grep "Task_logStatisticsInfo_"`|否|false|
+|success_conditions|用于通过响应数据的字段判断请求是否成功，多个用英文逗号分隔。只支持判断结构体中的单个属性，不支持判断数组元素中的单个属性。示例：`stat=1`、`stat=1,code=2`。|否|空|
+
+payload 参数示例：
+
+```json
+{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
+```
+
+Payload 文件示例：
+
+```json
+{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
+{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
+{"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
+```
+
+payload 参数介绍：
+
+* params：拼接在 URL 后面的参数，需进行 URL 编码，比如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
+* headers：请求的 HTTP 头，格式为 JSON，需要数据进行 JSON 转义，比如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+* body：请求的请求体，格式为 JSON，需要数据进行 JSON 转义，用于 POST 请求。
+
+
 
 ### 如何使用
 
-1. 第一步，先构建项目
+1. 第一步，拉去项目。
 
-```shell
-go build -o http-diff main.go
+```
+git clone https://github.com/LanSeTianYe/http-diff.git
 ```
 
-2. 第二部，根据需要修改配置文件 `config.toml`。
-
-
-3. 第三步，运行程序
+2. 第二步，先构建项目
 
 ```shell
-# 使用默认配置文件
-./http-diff start
-# 使用指定配置文件
-./http-diff start -c ./config/config.toml
+cd http-diff && go mod tidy && go build -o http-diff main.go
+```
 
+3. 第二部，根据需要修改配置文件 `config.toml`。
+
+
+4. 第三步，运行程序
+
+```shell
+# 默认配置文件
+./http-diff start
+# 指定配置文件
+./http-diff start -c ./config/config.toml
 ```
 
 ## todo
 
-* 统计数据并发访问问题处理。
+* concurrency 参数校验。
+* POST 请求的ContentType梳理，现在的逻辑是不是有什么确实。
+* 删除日志统计信息开关。
+* 输出信息文件。
