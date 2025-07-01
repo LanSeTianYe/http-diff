@@ -4,9 +4,9 @@
 
 `Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。
 
-从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据，对比结果会放在工作目录的 `{任务名}_output.txt` 文件中，运行过程中出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
+从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据。对比结果会放在工作目录的 `{任务名}_output.txt` 文件中。出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
 
-`payload` 文件和错误信息文件数据对比：
+`payload` 文件和错误信息文件内容对比：
 
 ```json
 # payload 文件
@@ -43,7 +43,7 @@
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
 ```
 
-** payload 文件示例：**
+**`payload` 文件示例：**
 
 ```json
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
@@ -63,7 +63,7 @@
 
 1. 第一步，拉去项目。
 
-```
+```shell
 git clone https://github.com/LanSeTianYe/http-diff.git
 ```
 
@@ -87,7 +87,6 @@ cd http-diff && go mod tidy && go build -o http-diff main.go
 
 ## todo
 
-* concurrency 参数校验。
 * POST 请求的ContentType梳理，现在的逻辑是不是有什么确实。
 * 删除日志统计信息开关。
 * 输出信息文件。
