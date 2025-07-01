@@ -4,7 +4,7 @@
 
 `Http Diff` 是一个用于对比接口响应数据的工具，使用相同参数分别调用 `接口A` 和 `接口B`，然后对两个接口的响应数据进行对比，最终输出对比结果。
 
-从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据，对比结果会放在工作目录的 `{任务名}_output.txt` 文件中，运行过程中出错的请求会被记录到 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
+从 `paylaod` 参数指定的文件中读取参数，向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据，对比结果会放在工作目录的 `{任务名}_output.txt` 文件中，运行过程中出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中，错误信息文件和 `payload` 文件格式一致，可以复用。
 
 `payload` 文件和错误信息文件数据对比：
 
@@ -37,13 +37,13 @@
 |log_statistics|是否在日志中打印任务统计信息。可以在日志记录：总请求数、失败请求数量、无 `diff` 请求数量、`diff` 请求数量、总进度。<br> 查看命令：`tail 日志文件 |grep "Task_logStatisticsInfo_"`|否|false|
 |success_conditions|用于通过响应数据的字段判断请求是否成功，多个用英文逗号分隔。只支持判断结构体中的单个属性，不支持判断数组元素中的单个属性。示例：`stat=1`、`stat=1,code=2`。|否|空|
 
-payload 参数示例：
+**`payload` 参数示例：**
 
 ```json
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
 ```
 
-Payload 文件示例：
+** payload 文件示例：**
 
 ```json
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
@@ -51,11 +51,11 @@ Payload 文件示例：
 {"params": "key1%3Dvalue1%26key2%3Dvalue2", "headers": "{\"Name\":\"aaa\",\"traceid\":\"bbb\"}", "body":"{\"ids\":\"123\",\"userId\":\"456\"}"}
 ```
 
-payload 参数介绍：
+**payload 参数介绍：**
 
-* params：拼接在 URL 后面的参数，需进行 URL 编码，比如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
-* headers：请求的 HTTP 头，格式为 JSON，需要数据进行 JSON 转义，比如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
-* body：请求的请求体，格式为 JSON，需要数据进行 JSON 转义，用于 POST 请求。
+* `params`：拼接在 `URL` 后面的参数，需进行 `URL` 编码，例如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
+* `headers`：请求的 `HTTP` 头，格式为 `JSON`，需要数据进行` JSON 转义`，例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+* `body`：请求的请求体，格式为 `JSON`，需要数据进行 `JSON` 转义，用于 `POST` 请求。
 
 
 
