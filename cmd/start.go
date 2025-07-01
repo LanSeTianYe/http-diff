@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"http-diff/cmd/task"
 	"http-diff/lib/config"
 	"http-diff/lib/http"
@@ -41,6 +43,12 @@ var startCmd = &cobra.Command{
 
 		http.Init(cfg.FastHttp)
 
+		if validatedDiffConfig, err := validateDiffConfig(cfg.DiffConfigs); err != nil {
+			return err
+		} else {
+			cfg.DiffConfigs = validatedDiffConfig
+		}
+
 		ctx, cancelFunc := context.WithCancel(context.Background())
 		defer cancelFunc()
 
@@ -65,4 +73,49 @@ var startCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+// 验证参数
+func validateDiffConfig(diffConfigs []config.DiffConfig) ([]config.DiffConfig, error) {
+	if len(diffConfigs) == 0 {
+		return nil, errors.New("diffConfig cannot be empty")
+	}
+
+	result := make([]config.DiffConfig, 0, len(diffConfigs))
+
+	for index, diffConfig := range diffConfigs {
+
+		if diffConfig.Name == "" {
+			return nil, errors.New(fmt.Sprintf("diff config name cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		// 设置默认值
+		if diffConfig.Concurrency <= 0 {
+			diffConfig.Concurrency = 1
+		}
+
+		if diffConfig.WorkDir == "" {
+			return nil, errors.New(fmt.Sprintf("diff config work_dir cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		if diffConfig.Payload == "" {
+			return nil, errors.New(fmt.Sprintf("diff config payload cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		if diffConfig.UrlA == "" {
+			return nil, errors.New(fmt.Sprintf("diff config url_a cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		if diffConfig.UrlB == "" {
+			return nil, errors.New(fmt.Sprintf("diff config url_b cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		if diffConfig.Method == "" {
+			return nil, errors.New(fmt.Sprintf("diff config method cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+		}
+
+		result = append(result, diffConfig)
+	}
+
+	return result, nil
 }
