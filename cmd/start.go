@@ -82,12 +82,20 @@ func validateDiffConfig(diffConfigs []config.DiffConfig) ([]config.DiffConfig, e
 	}
 
 	result := make([]config.DiffConfig, 0, len(diffConfigs))
+	taskNameIndexMap := make(map[string]int)
 
 	for index, diffConfig := range diffConfigs {
 
 		if diffConfig.Name == "" {
 			return nil, errors.New(fmt.Sprintf("diff config name cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
 		}
+
+		// 检查任务名称是否重复
+		if existingIndex, exists := taskNameIndexMap[diffConfig.Name]; exists {
+			return nil, errors.New(fmt.Sprintf("diff config name is duplicated: %s, first defined at index [%d], current index [%d]", diffConfig.Name, existingIndex, index))
+		}
+
+		taskNameIndexMap[diffConfig.Name] = index
 
 		// 设置默认值
 		if diffConfig.Concurrency <= 0 {
