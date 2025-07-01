@@ -10,7 +10,7 @@
 
 第二步：发送请求并对比结果。向配置文件中指定的 `url_a` 和 `url_b` 发送请求，然后对比接口返回的数据。
 
-第三部：输出结果并记录错误。
+第三步：输出结果并记录错误。
 
 * 对比结果会放在工作目录的 `{任务名}_output.txt` 文件中。
 * 出错的请求会被记录到工作目录的 `{任务名}_failed_payload.txt` 文件中。错误信息文件和 `payload` 文件格式一致，可以当作输入复用。
@@ -60,8 +60,12 @@
 
 **payload 参数介绍：**
 
-* `params`：拼接在 `URL` 后面的参数，需进行 `URL` 编码，例如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
-* `headers`：请求的 `HTTP` 头，格式为 `JSON`，需要数据进行` JSON 转义`，例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+* `params`：拼接在 `URL` 后面的参数，需进行 `URL` 编码。
+  * 例如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
+
+* `headers`：请求的 `HTTP` 头，格式为 `JSON`，需要数据进行` JSON 转义`。
+  * 例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+
 * `body`：请求的请求体，格式为 `JSON`，需要数据进行 `JSON` 转义，用于 `POST` 请求。
 
 **统计信息查看命令：**
@@ -74,22 +78,23 @@ tail -f 日志文件 | `grep "Task_logStatisticsInfo_"`
 
 ### 如何使用
 
-1. 第一步，拉取项目。
+1. 第一步：拉取项目。
 
 ```shell
 git clone https://github.com/LanSeTianYe/http-diff.git
 ```
 
-2. 第二步，构建项目。
+2. 第二步：构建项目。
 
 ```shell
 cd http-diff && go mod tidy && go build -o http-diff main.go
 ```
 
-3. 第二部，根据需要修改配置文件 [./config/config.toml](./config/config.toml)。
+3. 第三步：根据需要修改配置文件 [./config/config.toml](./config/config.toml)。
+4. 第四步：把请求参数放到 `payload` 指定的文件中。请求参数示例参考上文 `payload` 参数相关内容。
 
 
-4. 第三步，运行程序。
+4. 第五步：运行程序。
 
 ```shell
 # 默认配置文件
