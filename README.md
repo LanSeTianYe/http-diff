@@ -95,7 +95,7 @@ cd http-diff && go mod tidy && go build -o http-diff main.go
 ```
 
 3. 第三步：根据需要修改配置文件 [./config/config.toml](./config/config.toml)。
-4. 第四步：把请求参数放到 `payload` 指定的文件中。请求参数示例参考上文 `payload` 参数相关内容。
+4. 第四步：把请求参数放到 `payload` 指定的文件中。参考上文 `payload` 参数相关内容，或 [./data/payload_task_1.txt](./data/payload_task_1.txt) 文件。
 
 
 4. 第五步：运行程序。
