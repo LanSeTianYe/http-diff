@@ -56,12 +56,6 @@ func TestPostForm(t *testing.T) {
 	logger.Init("TestNacos", configStruct.LoggerConfig)
 	Init(configStruct.FastHttp)
 
-	type request struct {
-		Name    string   `json:"name"`
-		Age     int      `json:"age"`
-		Friends []string `json:"friends"`
-	}
-
 	type response struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`
@@ -77,7 +71,7 @@ func TestPostForm(t *testing.T) {
 	headers := make(map[string]string)
 	headers[constant.HeaderKeyContextType] = constant.ContentTypeForm
 
-	err = PostTimeOut(background, "http://127.0.0.1:8080/form", "name=test&age=18&friends[]=name1&friends[]=name2", headers, time.Second, result)
+	err = PostTimeOut(background, "http://127.0.0.1:8080/form", "name=test&age=18&friends=name1&friends=name2", headers, time.Second, result)
 
 	assert.Nil(t, err)
 }

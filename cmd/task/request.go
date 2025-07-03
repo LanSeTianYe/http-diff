@@ -113,7 +113,17 @@ func initPostParams(taskInfo *Info, payload *Payload) (interface{}, error) {
 	}
 
 	if taskInfo.ContentType == constant.ContentTypeForm {
-		params = payload.Body
+		formUnescape, err := url.QueryUnescape(payload.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		formParams, err := url.ParseQuery(formUnescape)
+		if err != nil {
+			return nil, err
+		}
+
+		params = formParams.Encode()
 	} else {
 		err := sonic.Unmarshal([]byte(payload.Body), &params)
 		if err != nil {
