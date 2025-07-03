@@ -73,16 +73,11 @@ func TestPostForm(t *testing.T) {
 
 	background := context.Background()
 	result := &response{}
-	params := request{
-		Name:    "test",
-		Age:     18,
-		Friends: []string{"name1", "name2"},
-	}
 
 	headers := make(map[string]string)
 	headers[constant.HeaderKeyContextType] = constant.ContentTypeForm
 
-	err = PostTimeOut(background, "http://127.0.0.1:8080/form", params, headers, time.Second, result)
+	err = PostTimeOut(background, "http://127.0.0.1:8080/form", "name=test&age=18&friends[]=name1&friends[]=name2", headers, time.Second, result)
 
 	assert.Nil(t, err)
 }
