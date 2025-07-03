@@ -178,11 +178,13 @@ func PostTimeOut(ctx context.Context, requestUrl string, params interface{}, hea
 	req.Header.SetContentType(constant.ContentTypeJson)
 	if headers[constant.HeaderKeyContextType] == constant.ContentTypeForm {
 		req.Header.SetContentType(constant.ContentTypeForm)
-		values, err := url.ParseQuery(params.(string))
-		if err != nil {
-			return err
+		if params != nil {
+			values, err := url.ParseQuery(params.(string))
+			if err != nil {
+				return err
+			}
+			req.SetBodyString(values.Encode())
 		}
-		req.SetBodyString(values.Encode())
 	} else {
 		marshal, err := sonic.Marshal(params)
 		if err != nil {
