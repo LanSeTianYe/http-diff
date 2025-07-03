@@ -61,11 +61,11 @@ func (s *StatisticsInfo) GetTotalCount() int64 {
 	return s.totalCount
 }
 
-func (s *StatisticsInfo) GetRunTime() string {
+func (s *StatisticsInfo) GetTimeCost() string {
 	return strconv.FormatFloat(time.Since(s.startTime).Seconds(), 'f', 0, 64) + "s"
 }
 
-func (s *StatisticsInfo) GetRemainedTime() string {
+func (s *StatisticsInfo) GetTimeLeft() string {
 	runTime := time.Since(s.startTime).Seconds()
 	timeLeft := float64(s.GetTotalCount()-s.GetProcessedCount()) * runTime / float64(s.GetProcessedCount())
 
