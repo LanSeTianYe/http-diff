@@ -17,7 +17,7 @@ type FailedOutPut struct {
 	Err     string `json:"err"`
 }
 
-func NewFailedOuyPut(payload *Payload, err error) *FailedOutPut {
+func NewFailedOutput(payload *Payload, err error) *FailedOutPut {
 	errStr := ""
 	if err != nil {
 		errStr = err.Error()

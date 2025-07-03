@@ -281,13 +281,13 @@ func (t *Task) run() {
 			if urlAResponseErr != nil || urlBResponseErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to get response", zap.Any("payload", payload), zap.Any("urlAResponseErr", urlAResponseErr), zap.Any("urlBResponseErr", urlBResponseErr))
 				t.statisticsInfo.AddFailed()
-				t.failedCH <- NewFailedOuyPut(payload, errors.New("failed to get response: "+cast.ToString(urlAResponseErr)+"; "+cast.ToString(urlBResponseErr)))
+				t.failedCH <- NewFailedOutput(payload, errors.New("failed to get response: "+cast.ToString(urlAResponseErr)+"; "+cast.ToString(urlBResponseErr)))
 				break SelectLoop
 			}
 
 			if !t.responseSuccess(urlAResponse) || !t.responseSuccess(urlBResponse) {
 				logger.Error(t.ctx, "Task_run Response does not meet success conditions", zap.Any("payload", payload), zap.Any("urlAResponse", urlAResponse), zap.Any("urlBResponse", urlBResponse))
-				t.failedCH <- NewFailedOuyPut(payload, errors.New("response does not meet success conditions"))
+				t.failedCH <- NewFailedOutput(payload, errors.New("response does not meet success conditions"))
 				t.statisticsInfo.AddFailed()
 				break SelectLoop
 			}
@@ -299,7 +299,7 @@ func (t *Task) run() {
 				urlAValue, err := util.SetJsonFieldToNil(urlAResponse, field)
 				if err != nil {
 					logger.Error(t.ctx, "Task_run Failed to set field to nil in urlA response", zap.Any("response", urlAResponse), zap.Any("field", field), zap.Error(err))
-					t.failedCH <- NewFailedOuyPut(payload, err)
+					t.failedCH <- NewFailedOutput(payload, err)
 					t.statisticsInfo.AddFailed()
 					break SelectLoop
 				}
@@ -307,7 +307,7 @@ func (t *Task) run() {
 
 				urlBValue, err := util.SetJsonFieldToNil(urlBResponse, field)
 				if err != nil {
-					t.failedCH <- NewFailedOuyPut(payload, err)
+					t.failedCH <- NewFailedOutput(payload, err)
 					t.statisticsInfo.AddFailed()
 					logger.Error(t.ctx, "Task_run Failed to set field to nil in urlB response", zap.Any("response", urlBResponse), zap.Any("field", field), zap.Error(err))
 					break SelectLoop
@@ -326,7 +326,7 @@ func (t *Task) run() {
 			urlBErr := t.recoverFileValue(urlBResponse, urlBResponseFieldMap)
 			if urlAErr != nil || urlBErr != nil {
 				logger.Error(t.ctx, "Task_run Failed to set field value in response", zap.Any("payload", payload), zap.Any("urlAErr", urlAErr), zap.Any("urlBErr", urlBErr))
-				t.failedCH <- NewFailedOuyPut(payload, errors.New("failed to set field value in response: "+cast.ToString(urlAErr)+"; "+cast.ToString(urlBErr)))
+				t.failedCH <- NewFailedOutput(payload, errors.New("failed to set field value in response: "+cast.ToString(urlAErr)+"; "+cast.ToString(urlBErr)))
 				t.statisticsInfo.AddFailed()
 				break SelectLoop
 			}
