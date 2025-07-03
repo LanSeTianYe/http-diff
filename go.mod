@@ -1,6 +1,8 @@
 module http-diff
 
-go 1.23.3
+go 1.22.1
+
+toolchain go1.22.8
 
 require (
 	github.com/bytedance/sonic v1.13.2

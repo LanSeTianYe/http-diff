@@ -29,6 +29,6 @@ func Init(configFile string, configStruct any) error {
 	}
 
 	fmt.Printf("config info, config path:%#v, config:%#v\n", configFile, configStruct)
-	
+
 	return nil
 }

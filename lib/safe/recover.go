@@ -2,8 +2,10 @@ package safe
 
 import (
 	"context"
-	"go.uber.org/zap"
+
 	"http-diff/lib/logger"
+
+	"go.uber.org/zap"
 )
 
 func Recovery(panicWriter func(message any)) {

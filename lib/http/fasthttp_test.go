@@ -14,7 +14,9 @@ import (
 
 func TestGet(t *testing.T) {
 	configStruct := &config.Configs{}
-	config.Init("./data/config.toml", configStruct)
+	err := config.Init("./data/config.toml", configStruct)
+	assert.Nil(t, err)
+
 	logger.Init("TestNacos", configStruct.LoggerConfig)
 	Init(configStruct.FastHttp)
 
@@ -41,14 +43,16 @@ func TestGet(t *testing.T) {
 		Friends: []string{"name1", "name2"},
 	}
 
-	err := GetTimeOut(background, "http://127.0.0.1:8080/ping", params, nil, time.Second, result)
+	err = GetTimeOut(background, "http://127.0.0.1:8080/ping", params, nil, time.Second, result)
 
 	assert.Nil(t, err)
 }
 
 func TestPostForm(t *testing.T) {
 	configStruct := &config.Configs{}
-	config.Init("./data/config.toml", configStruct)
+	err := config.Init("./data/config.toml", configStruct)
+	assert.Nil(t, err)
+
 	logger.Init("TestNacos", configStruct.LoggerConfig)
 	Init(configStruct.FastHttp)
 
@@ -78,14 +82,16 @@ func TestPostForm(t *testing.T) {
 	headers := make(map[string]string)
 	headers[constant.HeaderKeyContextType] = constant.ContentTypeForm
 
-	err := PostTimeOut(background, "http://127.0.0.1:8080/form", params, headers, time.Second, result)
+	err = PostTimeOut(background, "http://127.0.0.1:8080/form", params, headers, time.Second, result)
 
 	assert.Nil(t, err)
 }
 
 func TestPostJson(t *testing.T) {
 	configStruct := &config.Configs{}
-	config.Init("./data/config.toml", configStruct)
+	err := config.Init("./data/config.toml", configStruct)
+	assert.Nil(t, err)
+
 	logger.Init("TestNacos", configStruct.LoggerConfig)
 	Init(configStruct.FastHttp)
 
@@ -114,7 +120,7 @@ func TestPostJson(t *testing.T) {
 
 	headers := make(map[string]string)
 	headers[constant.HeaderKeyContextType] = constant.ContentTypeJson
-	err := PostTimeOut(background, "http://127.0.0.1:8080/json", params, nil, time.Minute, result)
+	err = PostTimeOut(background, "http://127.0.0.1:8080/json", params, nil, time.Minute, result)
 
 	assert.Nil(t, err)
 }

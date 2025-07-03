@@ -126,7 +126,7 @@ func GetTimeOut(ctx context.Context, requestUrl string, params interface{}, head
 	if params != nil {
 		req.SetRequestURI(fmt.Sprintf("%s?%s", requestUrl, queryValues.Encode()))
 	} else {
-		req.SetRequestURI(fmt.Sprintf("%s", requestUrl))
+		req.SetRequestURI(requestUrl)
 	}
 
 	req.Header.SetMethod(fasthttp.MethodGet)

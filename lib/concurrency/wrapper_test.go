@@ -2,9 +2,10 @@ package concurrency
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"sync/atomic"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewSafeGoWrapper(t *testing.T) {

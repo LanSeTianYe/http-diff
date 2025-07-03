@@ -359,8 +359,19 @@ func (t *Task) writeOutputToFile() error {
 		return err
 	}
 
-	defer outputFile.Close()
-	defer outputFile.Sync()
+	defer func() {
+		errInner := outputFile.Close()
+		if errInner != nil {
+			logger.Error(t.ctx, "Task_writeFailedPayloadToFile Failed to close output file", zap.String("outputFilePath", outputFilePath), zap.Error(errInner))
+		}
+	}()
+
+	defer func() {
+		errInner := outputFile.Sync()
+		if errInner != nil {
+			logger.Error(t.ctx, "Task_writeFailedPayloadToFile Failed to sync output file", zap.String("outputFilePath", outputFilePath), zap.Error(errInner))
+		}
+	}()
 
 	for {
 		select {
@@ -403,8 +414,19 @@ func (t *Task) writeFailedPayloadToFile() error {
 		return err
 	}
 
-	defer outputFile.Close()
-	defer outputFile.Sync()
+	defer func() {
+		errInner := outputFile.Close()
+		if errInner != nil {
+			logger.Error(t.ctx, "Task_writeFailedPayloadToFile Failed to close output file", zap.String("outputFilePath", outputFilePath), zap.Error(errInner))
+		}
+	}()
+
+	defer func() {
+		errInner := outputFile.Sync()
+		if errInner != nil {
+			logger.Error(t.ctx, "Task_writeFailedPayloadToFile Failed to sync output file", zap.String("outputFilePath", outputFilePath), zap.Error(errInner))
+		}
+	}()
 
 	for {
 		select {
@@ -433,12 +455,12 @@ func (t *Task) writeFailedPayloadToFile() error {
 
 // logStatisticsInfo 用于记录任务的统计信息
 func (t *Task) logStatisticsInfoLoop() {
-	tick := time.Tick(time.Second)
+	tick := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-t.ctx.Done():
 			return
-		case <-tick:
+		case <-tick.C:
 			t.logStatisticsInfo()
 		}
 	}

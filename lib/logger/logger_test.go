@@ -5,19 +5,21 @@ import (
 	"testing"
 
 	"http-diff/lib/config"
-	
+
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
 
-func initLogger(name string) {
+func initLogger(t assert.TestingT, name string) {
 	configs := config.Configs{}
-	config.Init("./data/config.toml", &configs)
+	err := config.Init("./data/config.toml", &configs)
+	assert.Nil(t, err)
 
 	Init(name, configs.LoggerConfig)
 }
 
 func TestW(t *testing.T) {
-	initLogger("TestF")
+	initLogger(t, "TestF")
 
 	ctx := initContext()
 
@@ -36,7 +38,7 @@ func TestW(t *testing.T) {
 }
 
 func TestMultiSingle(t *testing.T) {
-	initLogger("TestMultiSingle")
+	initLogger(t, "TestMultiSingle")
 
 	times := 1024
 	for i := 0; i < times; i++ {
@@ -46,7 +48,7 @@ func TestMultiSingle(t *testing.T) {
 
 // BenchmarkLogger-8   	  374352	      3036 ns/op
 func BenchmarkLogger(b *testing.B) {
-	initLogger("TestMultiSingle")
+	initLogger(b, "TestMultiSingle")
 
 	for i := 0; i < b.N; i++ {
 		Info(context.Background(), "测试打印日志", zap.String("name", "name"))

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 	"time"
-	
+
 	"http-diff/lib/config"
 
 	"github.com/go-resty/resty/v2"

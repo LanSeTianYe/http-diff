@@ -5,3 +5,7 @@ bench.txt
 
 http-diff
 http_diff.log
+
+data/payload_task_8.txt
+data/task_8_output.txt
+data/task_8_failed_payload.txt

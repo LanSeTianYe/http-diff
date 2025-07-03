@@ -9,7 +9,8 @@ import (
 
 func TestParseConfig(t *testing.T) {
 	var conf = &Configs{}
-	Init("./data/config.toml", conf)
+	err := Init("./data/config.toml", conf)
+	assert.Nil(t, err)
 
 	assert.NotNil(t, conf)
 	assert.NotNil(t, conf.App)

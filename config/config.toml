@@ -30,4 +30,19 @@ content_type = "application/json"
 ignore_fields = "traceId"
 output_show_no_diff_line = true
 log_statistics = true
-success_conditions = "stat=1"
+success_conditions = "code="
+
+[[diff_configs]]
+name = "task_8"
+concurrency = 8
+wait_time = "0ms"
+work_dir = "./data"
+payload = "payload_task_8.txt"
+url_a = "http://127.0.0.1:8080/ping"
+url_b = "http://127.0.0.1:8080/ping"
+method = "GET"
+content_type = "application/json"
+ignore_fields = "traceId"
+output_show_no_diff_line = true
+log_statistics = true
+success_conditions = "code="

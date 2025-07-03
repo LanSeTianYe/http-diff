@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"http-diff/cmd/task"
@@ -79,7 +78,7 @@ var startCmd = &cobra.Command{
 // 验证参数
 func validateDiffConfig(diffConfigs []config.DiffConfig) ([]config.DiffConfig, error) {
 	if len(diffConfigs) == 0 {
-		return nil, errors.New("diffConfig cannot be empty")
+		return nil, fmt.Errorf("diffConfig cannot be empty")
 	}
 
 	result := make([]config.DiffConfig, 0, len(diffConfigs))
@@ -88,12 +87,12 @@ func validateDiffConfig(diffConfigs []config.DiffConfig) ([]config.DiffConfig, e
 	for index, diffConfig := range diffConfigs {
 
 		if diffConfig.Name == "" {
-			return nil, errors.New(fmt.Sprintf("diff config name cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config name cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		// 检查任务名称是否重复
 		if existingIndex, exists := taskNameIndexMap[diffConfig.Name]; exists {
-			return nil, errors.New(fmt.Sprintf("diff config name is duplicated: %s, first defined at index [%d], current index [%d]", diffConfig.Name, existingIndex, index))
+			return nil, fmt.Errorf("diff config name is duplicated: %s, first defined at index [%d], current index [%d]", diffConfig.Name, existingIndex, index)
 		}
 
 		taskNameIndexMap[diffConfig.Name] = index
@@ -104,23 +103,23 @@ func validateDiffConfig(diffConfigs []config.DiffConfig) ([]config.DiffConfig, e
 		}
 
 		if diffConfig.WorkDir == "" {
-			return nil, errors.New(fmt.Sprintf("diff config work_dir cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config work_dir cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		if diffConfig.Payload == "" {
-			return nil, errors.New(fmt.Sprintf("diff config payload cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config payload cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		if diffConfig.UrlA == "" {
-			return nil, errors.New(fmt.Sprintf("diff config url_a cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config url_a cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		if diffConfig.UrlB == "" {
-			return nil, errors.New(fmt.Sprintf("diff config url_b cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config url_b cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		if diffConfig.Method == "" {
-			return nil, errors.New(fmt.Sprintf("diff config method cannot be empty,index:[%d], config detial:[%v]", index, diffConfig))
+			return nil, fmt.Errorf("diff config method cannot be empty,index:[%d], config detial:[%v]", index, diffConfig)
 		}
 
 		result = append(result, diffConfig)
