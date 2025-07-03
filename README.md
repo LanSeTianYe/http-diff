@@ -66,11 +66,15 @@
 
 * `params`：拼接在 `URL` 后面的参数，需进行 `URL` 编码。
   * 例如：`key1=value1&key2=value2` 编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
-
 * `headers`：请求的 `HTTP` 头，格式为 `JSON`，需要数据进行` JSON 转义`。
   * 例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+* `body`：请求的请求体，用于 `POST` 请求。
+  * 当 `POST` 请求的 `ContentType` 为 `application/x-www-form-urlencoded` 时，`body` 的内容为类似于 `URL` 参数的形式，需进行 `URL` 编码。
+    * 例如：`key1=value1&key2=value2` ，编码后的数据为：`key1%3Dvalue1%26key2%3Dvalue2`。
 
-* `body`：请求的请求体，格式为 `JSON`，需要数据进行 `JSON` 转义，用于 `POST` 请求。
+  * 其余情况，格式为 `JSON`，需要数据进行 `JSON` 转义。
+    * 例如：`{"Name":"aaa","traceid":"bbb"}`，转义后的数据为：`{\"Name\":\"aaa\",\"traceid\":\"bbb\"}`。
+
 
 **统计信息查看命令：**
 
