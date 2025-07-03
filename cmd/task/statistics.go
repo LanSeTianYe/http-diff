@@ -82,12 +82,12 @@ func (s *StatisticsInfo) GetProcessedCount() int64 {
 
 func (s *StatisticsInfo) GetProgress() string {
 	progressFloat := float64(s.GetProcessedCount()) / float64(s.GetTotalCount())
-	return strconv.FormatFloat(progressFloat, 'f', 2, 64)
+	return strconv.FormatFloat(progressFloat*100, 'f', 2, 64) + "%"
 }
 
 func (s *StatisticsInfo) GetRate() string {
 	rateFloat := float64(s.GetProcessedCount()-s.lastStatisticsCount) / time.Since(s.lastStatisticsTime).Seconds()
-	return strconv.FormatFloat(rateFloat, 'f', 2, 64)
+	return strconv.FormatFloat(rateFloat, 'f', 0, 64) + " req/s"
 }
 
 func (s *StatisticsInfo) ResetLastStatisticsInfo() {
