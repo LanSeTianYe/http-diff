@@ -451,8 +451,10 @@ func (t *Task) logStatisticsInfo() {
 		zap.Int64("sameCount:", t.statisticsInfo.GetSameCount()),
 		zap.Int64("diffCount", t.statisticsInfo.GetDiffCount()),
 		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
-		zap.String("progress", t.statisticsInfo.GetProgress()),
-		zap.String("rate", t.statisticsInfo.GetRate()),
+		zap.String("progress:", t.statisticsInfo.GetProgress()),
+		zap.String("rate:", t.statisticsInfo.GetRate()),
+		zap.String("time cost:", t.statisticsInfo.GetRunTime()),
+		zap.String("time left:", t.statisticsInfo.GetRemainedTime()),
 	)
 
 	t.statisticsInfo.ResetLastStatisticsInfo()

@@ -3,7 +3,7 @@ name = "http-diff"
 
 [log]
 console = true
-level = "DEBUG"
+level = "INFO"
 path = "./"
 file_name = "http_diff.log"
 max_size = 100
@@ -25,9 +25,9 @@ work_dir = "./data"
 payload = "payload_task_1.txt"
 url_a = "http://127.0.0.1:8080/ping"
 url_b = "http://127.0.0.1:8080/ping"
-method = "POST"
+method = "GET"
 content_type = "application/json"
-ignore_fields = "trace_id"
+ignore_fields = "traceId"
 output_show_no_diff_line = true
 log_statistics = true
 success_conditions = "stat=1"

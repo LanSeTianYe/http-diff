@@ -7,7 +7,11 @@ import (
 )
 
 type StatisticsInfo struct {
-	TotalCount int64
+	// totalCount 总请求数量
+	totalCount int64
+
+	// startTime 任务开始时间
+	startTime time.Time
 
 	//failedCount 失败的数量
 	failedCount *atomic.Int64
@@ -27,7 +31,8 @@ type StatisticsInfo struct {
 func NewStatisticsInfo(totalCount int) *StatisticsInfo {
 
 	s := &StatisticsInfo{
-		TotalCount:  int64(totalCount),
+		totalCount:  int64(totalCount),
+		startTime:   time.Now(),
 		failedCount: &atomic.Int64{},
 		diffCount:   &atomic.Int64{},
 		sameCount:   &atomic.Int64{},
@@ -52,12 +57,19 @@ func (s *StatisticsInfo) AddSame() {
 	s.sameCount.Add(1)
 }
 
-func (s *StatisticsInfo) UpdateLastStatisticsTime() {
-	s.lastStatisticsTime = time.Now()
+func (s *StatisticsInfo) GetTotalCount() int64 {
+	return s.totalCount
 }
 
-func (s *StatisticsInfo) GetTotalCount() int64 {
-	return s.TotalCount
+func (s *StatisticsInfo) GetRunTime() string {
+	return strconv.FormatFloat(time.Since(s.startTime).Seconds(), 'f', 0, 64) + "s"
+}
+
+func (s *StatisticsInfo) GetRemainedTime() string {
+	runTime := time.Since(s.startTime).Seconds()
+	timeLeft := float64(s.GetTotalCount()-s.GetProcessedCount()) * runTime / float64(s.GetProcessedCount())
+
+	return strconv.FormatFloat(timeLeft, 'f', 0, 64) + "s"
 }
 
 func (s *StatisticsInfo) GetFailedCount() int64 {
@@ -70,10 +82,6 @@ func (s *StatisticsInfo) GetDiffCount() int64 {
 
 func (s *StatisticsInfo) GetSameCount() int64 {
 	return s.sameCount.Load()
-}
-
-func (s *StatisticsInfo) GetLastStatisticsTime() time.Time {
-	return s.lastStatisticsTime
 }
 
 func (s *StatisticsInfo) GetProcessedCount() int64 {
