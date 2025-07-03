@@ -115,9 +115,9 @@ func InitTask(ctx context.Context, cfg Config) (*Task, error) {
 			Url:         cfg.UrlB,
 			ContentType: cfg.ContentType,
 		},
-		inputCh:  make(chan *Payload, 1000),
-		outputCh: make(chan *OutPut, 1000),
-		failedCH: make(chan *FailedOutPut, 1000),
+		inputCh:  make(chan *Payload, 100000),
+		outputCh: make(chan *OutPut, 100000),
+		failedCH: make(chan *FailedOutPut, 10000),
 	}
 
 	if cfg.SuccessConditions != "" {
@@ -445,12 +445,17 @@ func (t *Task) logStatisticsInfoLoop() {
 }
 
 func (t *Task) logStatisticsInfo() {
+
 	logger.Info(t.ctx, "Task_logStatisticsInfo_"+t.Config.TaskName+":",
 		zap.Int64("totalCount:", t.statisticsInfo.GetTotalCount()),
 		zap.Int64("sameCount:", t.statisticsInfo.GetSameCount()),
 		zap.Int64("diffCount", t.statisticsInfo.GetDiffCount()),
 		zap.Int64("failedCount:", t.statisticsInfo.GetFailedCount()),
-		zap.Float64("progress", float64(t.statisticsInfo.GetFailedCount()+t.statisticsInfo.GetSameCount()+t.statisticsInfo.GetDiffCount())/float64(t.statisticsInfo.GetTotalCount())*100))
+		zap.String("progress", t.statisticsInfo.GetProgress()),
+		zap.String("rate", t.statisticsInfo.GetRate()),
+	)
+
+	t.statisticsInfo.ResetLastStatisticsInfo()
 }
 
 func (t *Task) responseSuccess(result interface{}) bool {

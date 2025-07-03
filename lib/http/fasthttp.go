@@ -40,6 +40,7 @@ func Init(config config.FastHttp) {
 			NoDefaultUserAgentHeader:      false, // default User-Agent: fasthttp
 			DisableHeaderNamesNormalizing: true,  // If you set the case on your headers correctly you can enable this
 			DisablePathNormalizing:        true,
+			MaxResponseBodySize:           10 * 1024 * 1024,
 			RetryIfErr: func(request *fasthttp.Request, attempts int, err error) (resetTimeout bool, retry bool) {
 				//幂等方法
 				methodNeedRetry := request.Header.IsGet() || request.Header.IsHead() || request.Header.IsPut()
@@ -203,7 +204,7 @@ func PostTimeOut(ctx context.Context, requestUrl string, params interface{}, hea
 }
 
 func doTimeOut(ctx context.Context, req *fasthttp.Request, resp *fasthttp.Response, timeOut time.Duration, result interface{}) error {
-	logger.Info(ctx, "http_DoTimeOut", zap.Any("request", req), zap.Any("response", resp), zap.Duration("timeOut", timeOut))
+	logger.Debug(ctx, "http_DoTimeOut", zap.Any("request", req), zap.Any("response", resp), zap.Duration("timeOut", timeOut))
 
 	var err error
 

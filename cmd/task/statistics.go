@@ -1,6 +1,10 @@
 package task
 
-import "sync/atomic"
+import (
+	"strconv"
+	"sync/atomic"
+	"time"
+)
 
 type StatisticsInfo struct {
 	TotalCount int64
@@ -13,6 +17,11 @@ type StatisticsInfo struct {
 
 	//sameCount 没有diff的数量
 	sameCount *atomic.Int64
+
+	// lastStatisticsTime 上次统计时间
+	lastStatisticsTime time.Time
+	// lastStatisticsCount 上次统计的数量
+	lastStatisticsCount int64
 }
 
 func NewStatisticsInfo(totalCount int) *StatisticsInfo {
@@ -43,6 +52,10 @@ func (s *StatisticsInfo) AddSame() {
 	s.sameCount.Add(1)
 }
 
+func (s *StatisticsInfo) UpdateLastStatisticsTime() {
+	s.lastStatisticsTime = time.Now()
+}
+
 func (s *StatisticsInfo) GetTotalCount() int64 {
 	return s.TotalCount
 }
@@ -57,4 +70,27 @@ func (s *StatisticsInfo) GetDiffCount() int64 {
 
 func (s *StatisticsInfo) GetSameCount() int64 {
 	return s.sameCount.Load()
+}
+
+func (s *StatisticsInfo) GetLastStatisticsTime() time.Time {
+	return s.lastStatisticsTime
+}
+
+func (s *StatisticsInfo) GetProcessedCount() int64 {
+	return s.GetSameCount() + s.GetFailedCount() + s.GetDiffCount()
+}
+
+func (s *StatisticsInfo) GetProgress() string {
+	progressFloat := float64(s.GetProcessedCount()) / float64(s.GetTotalCount())
+	return strconv.FormatFloat(progressFloat, 'f', 2, 64)
+}
+
+func (s *StatisticsInfo) GetRate() string {
+	rateFloat := float64(s.GetProcessedCount()-s.lastStatisticsCount) / time.Since(s.lastStatisticsTime).Seconds()
+	return strconv.FormatFloat(rateFloat, 'f', 2, 64)
+}
+
+func (s *StatisticsInfo) ResetLastStatisticsInfo() {
+	s.lastStatisticsCount = s.GetProcessedCount()
+	s.lastStatisticsTime = time.Now()
 }
