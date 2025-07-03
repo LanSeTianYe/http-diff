@@ -3,10 +3,11 @@ package task
 import (
 	"context"
 	"errors"
+	"net/url"
+
 	"http-diff/constant"
 	"http-diff/lib/http"
 	"http-diff/lib/logger"
-	"net/url"
 
 	"github.com/bytedance/sonic"
 	"go.uber.org/zap"

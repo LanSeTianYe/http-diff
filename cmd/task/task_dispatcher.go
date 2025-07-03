@@ -2,10 +2,11 @@ package task
 
 import (
 	"context"
+	"strings"
+
 	"http-diff/lib/concurrency"
 	"http-diff/lib/config"
 	"http-diff/lib/logger"
-	"strings"
 
 	"go.uber.org/zap"
 )
