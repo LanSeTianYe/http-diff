@@ -30,7 +30,7 @@ type Dispatcher struct {
 func NewDispatcher(ctx context.Context, diffConfigs []config.DiffConfig) (*Dispatcher, error) {
 
 	dispatcher := &Dispatcher{
-		ctx:             context.Background(),
+		ctx:             ctx,
 		tasks:           make([]*Task, 0, len(diffConfigs)),
 		safeGoWaitGroup: concurrency.NewSafeGoWaitGroup(),
 		done:            make(chan struct{}),
